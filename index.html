@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学校との面談準備サポート</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --green: #5b8a6b; --green-d: #4a7559; --green-l: #eef4f0; --green-m: #c8ddd0;
+  --blue: #7da5c7; --blue-l: #eef3f8;
+  --amber: #c8883a; --amber-l: #fdf3e7;
+  --purple: #8b6fb5; --purple-l: #f3f0f8;
+  --text: #3a3a3a; --sub: #777; --bg: #f7f5f1; --white: #fff; --border: #dde8e1;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Meiryo', sans-serif; font-size: 15px; line-height: 1.7; min-height: 100vh; }
+
+/* ─── 共通ボタン ─── */
+.btn { padding: 11px 24px; border: none; border-radius: 10px; font-size: 14px; font-family: inherit; cursor: pointer; font-weight: bold; transition: all 0.2s; }
+.btn-green { background: var(--green); color: #fff; }
+.btn-green:hover { background: var(--green-d); }
+.btn-outline { background: transparent; border: 1.5px solid var(--green-m); color: var(--sub); }
+.btn-outline:hover { border-color: var(--green); color: var(--green); }
+
+/* ─── コース選択画面 ─── */
+#course-select { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 28px 20px; }
+.cs-title { text-align: center; margin-bottom: 28px; }
+.cs-title h1 { font-size: 20px; color: var(--green); margin-bottom: 6px; }
+.cs-title p { font-size: 13px; color: var(--sub); line-height: 1.7; }
+.course-cards { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 420px; }
+.course-card {
+  background: var(--white); border-radius: 16px; padding: 20px 22px;
+  cursor: pointer; border: 2px solid transparent;
+  box-shadow: var(--shadow); transition: all 0.2s;
+  display: flex; gap: 14px; align-items: flex-start;
+}
+.course-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+.course-card.quick:hover, .course-card.quick.selected { border-color: var(--green); }
+.course-card.detail:hover, .course-card.detail.selected { border-color: var(--amber); }
+.course-card.feeling:hover, .course-card.feeling.selected { border-color: var(--purple); }
+.card-icon { font-size: 28px; flex-shrink: 0; margin-top: 2px; }
+.card-body { flex: 1; }
+.card-body h2 { font-size: 15px; margin-bottom: 4px; }
+.course-card.quick .card-body h2 { color: var(--green); }
+.course-card.detail .card-body h2 { color: var(--amber); }
+.course-card.feeling .card-body h2 { color: var(--purple); }
+.card-body p { font-size: 12px; color: var(--sub); line-height: 1.6; }
+.card-time { font-size: 11px; margin-top: 6px; font-weight: bold; }
+.course-card.quick .card-time { color: var(--green); }
+.course-card.detail .card-time { color: var(--amber); }
+.course-card.feeling .card-time { color: var(--purple); }
+
+/* ─── テーマ選択画面 ─── */
+#theme-select { display: none; flex-direction: column; align-items: center; min-height: 100vh; padding: 28px 20px; }
+.ts-header { text-align: center; margin-bottom: 20px; max-width: 420px; width: 100%; }
+.ts-header h2 { font-size: 17px; color: var(--amber); margin-bottom: 6px; }
+.ts-header p { font-size: 13px; color: var(--sub); }
+.theme-list { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.theme-item {
+  background: var(--white); border: 1.5px solid var(--border); border-radius: 12px;
+  padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px;
+  transition: all 0.15s; user-select: none;
+}
+.theme-item:hover { border-color: var(--amber); }
+.theme-item.checked { border-color: var(--amber); background: var(--amber-l); }
+.theme-check {
+  width: 20px; height: 20px; border: 2px solid var(--border); border-radius: 5px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px;
+  transition: all 0.15s;
+}
+.theme-item.checked .theme-check { background: var(--amber); border-color: var(--amber); color: #fff; }
+.theme-label { font-size: 14px; color: var(--text); }
+.ts-actions { width: 100%; max-width: 420px; display: flex; gap: 10px; justify-content: flex-end; }
+.select-all { font-size: 12px; color: var(--sub); cursor: pointer; text-decoration: underline; margin-bottom: 6px; text-align: right; max-width: 420px; width: 100%; }
+
+/* ─── チャット画面 ─── */
+#app { display: none; flex-direction: column; height: 100vh; max-width: 680px; margin: 0 auto; }
+#app-header {
+  background: var(--white); border-bottom: 1px solid var(--border);
+  padding: 11px 18px; display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.header-icon { font-size: 20px; }
+.header-info { flex: 1; }
+.header-info h1 { font-size: 13px; font-weight: bold; }
+.header-info .course-badge {
+  display: inline-block; font-size: 11px; padding: 1px 8px; border-radius: 8px; margin-left: 6px; font-weight: normal;
+}
+.badge-quick { background: var(--green-l); color: var(--green); }
+.badge-detail { background: var(--amber-l); color: var(--amber); }
+.badge-feeling { background: var(--purple-l); color: var(--purple); }
+
+/* プログレス */
+.progress-wrap { display: flex; align-items: center; gap: 8px; }
+.progress-bar { width: 80px; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+.fill-quick { background: var(--green); }
+.fill-detail { background: var(--amber); }
+.progress-text { font-size: 11px; color: var(--sub); white-space: nowrap; }
+
+/* チャット */
+#chat { flex: 1; overflow-y: auto; padding: 18px 14px; display: flex; flex-direction: column; gap: 14px; background: var(--green-l); }
+#chat::-webkit-scrollbar { width: 4px; }
+#chat::-webkit-scrollbar-thumb { background: var(--green-m); border-radius: 2px; }
+
+.msg-row { display: flex; gap: 8px; align-items: flex-end; opacity: 0; transform: translateY(8px); transition: opacity 0.3s, transform 0.3s; }
+.msg-row.show { opacity: 1; transform: translateY(0); }
+.msg-row.user { flex-direction: row-reverse; }
+.msg-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; align-self: flex-start; }
+.msg-row:not(.user) .msg-avatar { background: var(--green); }
+.msg-row.user .msg-avatar { background: var(--blue); }
+.msg-col { display: flex; flex-direction: column; gap: 2px; max-width: 78%; }
+.msg-row.user .msg-col { align-items: flex-end; }
+.msg-bubble { padding: 10px 14px; border-radius: 18px; font-size: 14px; line-height: 1.65; word-break: break-word; }
+.msg-row:not(.user) .msg-bubble { background: var(--white); border-top-left-radius: 4px; color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.msg-row.user .msg-bubble { background: var(--blue); border-top-right-radius: 4px; color: #fff; }
+.msg-time { font-size: 10px; color: rgba(0,0,0,0.3); }
+
+.typing-row .msg-bubble { padding: 12px 16px; }
+.typing-dots { display: flex; gap: 4px; align-items: center; }
+.tdot { width: 7px; height: 7px; border-radius: 50%; background: var(--green-m); animation: tdot 1.2s infinite; }
+.tdot:nth-child(2) { animation-delay: 0.2s; }
+.tdot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes tdot { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+
+/* まとめバー */
+#summary-bar {
+  background: var(--white); border-top: 1px solid var(--border);
+  padding: 8px 14px; flex-shrink: 0;
+  display: flex; align-items: center; gap: 10px;
+}
+#summary-bar p { font-size: 11px; color: var(--sub); flex: 1; line-height: 1.5; }
+#summary-btn { padding: 8px 16px; background: var(--green); color: #fff; border: none; border-radius: 16px; font-size: 12px; font-family: inherit; font-weight: bold; cursor: pointer; white-space: nowrap; transition: background 0.2s; }
+#summary-btn:hover { background: var(--green-d); }
+
+/* 入力 */
+#input-area { background: var(--white); border-top: 1px solid var(--border); padding: 9px 12px; display: flex; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+#user-input { flex: 1; border: 1px solid var(--border); border-radius: 18px; padding: 8px 14px; font-size: 14px; font-family: inherit; outline: none; resize: none; max-height: 100px; line-height: 1.5; color: var(--text); background: var(--bg); }
+#user-input:focus { border-color: var(--green); background: var(--white); }
+#send-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--green); color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.2s; }
+#send-btn:hover { background: var(--green-d); }
+#send-btn:disabled { background: var(--border); cursor: default; }
+
+#back-top-btn {
+  background: var(--green-l); border: 1.5px solid var(--green-m); color: var(--green);
+  font-size: 12px; font-weight: bold; font-family: inherit;
+  cursor: pointer; padding: 5px 11px; border-radius: 16px;
+  flex-shrink: 0; transition: all 0.2s; white-space: nowrap;
+}
+#back-top-btn:hover { background: var(--green-m); }
+
+.ts-nav { width: 100%; max-width: 420px; margin-bottom: 8px; }
+.ts-back-btn {
+  background: var(--green-l); border: 1.5px solid var(--green-m); color: var(--green);
+  font-size: 12px; font-weight: bold; font-family: inherit;
+  cursor: pointer; padding: 5px 11px; border-radius: 16px;
+  transition: all 0.2s;
+}
+.ts-back-btn:hover { background: var(--green-m); }
+
+/* ─── まとめ画面 ─── */
+#summary-screen { display: none; flex-direction: column; min-height: 100vh; max-width: 680px; margin: 0 auto; }
+#summary-header { background: var(--green); color: #fff; padding: 14px 20px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+#summary-header h2 { font-size: 15px; flex: 1; }
+.s-btn { padding: 7px 14px; border: 1.5px solid rgba(255,255,255,0.6); background: transparent; color: #fff; border-radius: 14px; font-size: 12px; font-family: inherit; cursor: pointer; transition: background 0.2s; }
+.s-btn:hover { background: rgba(255,255,255,0.15); }
+#summary-body { flex: 1; overflow-y: auto; padding: 24px 24px 40px; }
+
+.print-section { margin-bottom: 32px; }
+.print-page-break { page-break-before: always; }
+
+.doc-title { text-align: center; padding-bottom: 14px; border-bottom: 2px solid var(--green); margin-bottom: 20px; }
+.doc-title h1 { font-size: 17px; color: var(--green); margin-bottom: 3px; }
+.doc-title p { font-size: 11px; color: var(--sub); }
+
+.doc-block { margin-bottom: 16px; page-break-inside: avoid; }
+.doc-block h3 { font-size: 12px; color: var(--green); font-weight: bold; border-left: 3px solid var(--green); padding-left: 9px; margin-bottom: 8px; letter-spacing: 0.5px; }
+.doc-block .doc-text { font-size: 13px; line-height: 1.8; color: var(--text); background: var(--green-l); border-radius: 8px; padding: 10px 13px; white-space: pre-wrap; }
+.doc-block .doc-text.blue { background: var(--blue-l); }
+
+.teacher-section { background: var(--amber-l); border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; }
+.teacher-section h3 { font-size: 13px; color: var(--amber); font-weight: bold; margin-bottom: 8px; }
+.teacher-section p, .teacher-section li { font-size: 13px; color: var(--text); line-height: 1.8; }
+.teacher-section ul { padding-left: 18px; }
+
+.log-item { margin-bottom: 10px; }
+.log-bot { background: var(--white); border-radius: 10px; border-top-left-radius: 3px; padding: 8px 12px; font-size: 12px; color: var(--sub); line-height: 1.6; border: 1px solid var(--border); }
+.log-user { background: var(--blue-l); border-radius: 10px; border-top-right-radius: 3px; padding: 8px 12px; font-size: 13px; color: var(--text); line-height: 1.6; margin-left: 24px; }
+.log-label { font-size: 10px; color: var(--sub); margin-bottom: 2px; }
+
+.doc-footer { text-align: center; font-size: 11px; color: var(--sub); margin-top: 24px; border-top: 1px solid var(--border); padding-top: 14px; line-height: 1.8; }
+
+/* ─── 印刷 ─── */
+@media print {
+  #course-select, #theme-select, #app { display: none !important; }
+  #summary-screen { display: flex !important; min-height: auto; }
+  #summary-header .s-btn { display: none; }
+  body { font-size: 12px; }
+  .print-page-break { page-break-before: always; }
+  .doc-block .doc-text, .teacher-section { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .doc-title h1, .doc-block h3 { color: #000 !important; border-left-color: #000 !important; }
+  #summary-header { background: #333 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+
+<!-- ① コース選択 -->
+<div id="course-select">
+  <div class="cs-title">
+    <h1>🌿 学校との面談準備サポート</h1>
+    <p>どのように進めますか？<br>今の気持ちに合ったコースを選んでください。</p>
+  </div>
+  <div class="course-cards">
+    <div class="course-card quick" onclick="selectCourse('quick')">
+      <div class="card-icon">📋</div>
+      <div class="card-body">
+        <h2>ざっくりコース</h2>
+        <p>8つの質問に答えながら、基本的な情報を整理します。はじめての方にもおすすめです。</p>
+        <div class="card-time">⏱ 約10〜15分 / 全8問</div>
+      </div>
+    </div>
+    <div class="course-card detail" onclick="selectCourse('detail')">
+      <div class="card-icon">🔍</div>
+      <div class="card-body">
+        <h2>じっくりコース</h2>
+        <p>話したいテーマを自分で選んで、深く整理できます。伝えたいことが多い方に。</p>
+        <div class="card-time">⏱ テーマ数に応じて / テーマ選択式</div>
+      </div>
+    </div>
+    <div class="course-card feeling" onclick="selectCourse('feeling')">
+      <div class="card-icon">💭</div>
+      <div class="card-body">
+        <h2>気持ちから整理コース</h2>
+        <p>「何が気になっているのかわからない」そんな方向け。まず話すことから始めます。</p>
+        <div class="card-time">⏱ 自由な対話形式</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ② テーマ選択（じっくりのみ） -->
+<div id="theme-select">
+  <div class="ts-nav">
+    <button class="ts-back-btn" onclick="backToCourseSelect()">← 最初に戻る</button>
+  </div>
+  <div class="ts-header">
+    <h2>🔍 話したいテーマを選んでください</h2>
+    <p>いくつでも選べます。選んだテーマについて詳しく聞かせてもらいます。</p>
+  </div>
+  <div class="select-all" onclick="toggleSelectAll()">すべて選択 / 解除</div>
+  <div class="theme-list" id="theme-list"></div>
+  <div class="ts-actions">
+    <button class="btn btn-green" id="start-detail-btn" onclick="startDetailCourse()">このテーマで始める →</button>
+  </div>
+</div>
+
+<!-- ③ チャット -->
+<div id="app">
+  <div id="app-header">
+    <button id="back-top-btn" onclick="backToTop()">← 最初に戻る</button>
+    <div class="header-icon">🌿</div>
+    <div class="header-info">
+      <h1>学校との面談準備<span class="course-badge" id="course-badge"></span></h1>
+    </div>
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <span class="progress-text" id="progress-text"></span>
+    </div>
+  </div>
+  <div id="chat"></div>
+  <div id="summary-bar">
+    <p>ここまでの内容でたたき台を作れます。<br>詳しく話すほど充実します。</p>
+    <button id="summary-btn">📄 たたき台を作る</button>
+  </div>
+  <div id="input-area">
+    <textarea id="user-input" placeholder="思いつくままに書いてください…" rows="1"></textarea>
+    <button id="send-btn">↑</button>
+  </div>
+</div>
+
+<!-- ④ まとめ -->
+<div id="summary-screen">
+  <div id="summary-header">
+    <h2>📄 面談用たたき台シート</h2>
+    <button class="s-btn" id="back-btn">← 戻る</button>
+    <button class="s-btn" onclick="window.print()">🖨 印刷</button>
+  </div>
+  <div id="summary-body"></div>
+</div>
+
+<script>
+// ─── テーマ定義 ───
+const THEMES = [
+  { id: 'current',    label: '最近の様子・安心できること' },
+  { id: 'history',    label: 'これまでの経緯' },
+  { id: 'learning',   label: '学習面（読み・書き・授業）' },
+  { id: 'relations',  label: '人間関係（友達・先生）' },
+  { id: 'attendance', label: '登校・別室・環境調整' },
+  { id: 'method',     label: '学習方法・宿題・教材' },
+  { id: 'contact',    label: '連絡方法・行事参加' },
+  { id: 'support',    label: '利用できる支援（SC・SSW等）' },
+  { id: 'childwish',  label: 'お子さん自身の気持ち・希望' },
+];
+
+// ─── 状態 ───
+let currentCourse = null;
+let selectedThemes = [];
+let currentQ = 0;
+let totalQ = 0;
+let history = [];
+let conversationLog = [];
+
+// ─── システムプロンプト ───
+const BASE = `
+【基本姿勢】
+・「お子さん」と呼ぶ（名前は使わない）
+・一度に1問だけ聞く
+・あいまいな答えでも「〜ということかもしれませんね」と言語化を手伝う
+・共感・ねぎらいの言葉を自然に入れる
+・「答えなくて大丈夫です」「スキップしても大丈夫です」と伝えられる
+・「要望」ではなく「一緒に考える材料」としてフレーミングする
+・仮説・不確かさを大切にする：「〜かもしれない」「今のところ〜」という表現を使う
+・優先度・確信度がある場合はそれも引き出す（「今いちばん大事なのは？」）
+
+【まとめ生成 [GENERATE_SUMMARY] への対応】
+会話内容をもとに以下の形式のみで出力すること。余分な文章は不要。
+
+---SUMMARY_START---
+【今いちばん大事にしたいこと】
+（不明な場合は「まだ整理中かもしれません」）
+
+【今できていること・安心できること】
+（内容。なければ「（今回の対話では触れませんでした）」）
+
+【今いちばん困っていること・気になっていること】
+（「〜かもしれません」「〜と感じているようです」の表現を使う）
+
+【お子さんの特徴（現時点での整理）】
+・安心できる環境・関わり方：
+・苦手な場面・関わり方：
+・気持ち・体調のパターン：
+・好きなこと・得意なこと：
+
+【学校と一緒に考えたいこと】
+・（「〜を相談してみたい」「〜について一緒に考えられると助かる」の形で）
+
+【家庭でできること・試してみたいこと】
+（内容）
+
+【今日の面談で確認・決めたいこと】
+（内容）
+---SUMMARY_END---`;
+
+const QUICK_SYSTEM = `あなたは面談準備サポートアシスタントです。
+${BASE}
+
+【ざっくりコース：8問を順番に聞く】
+Q1「今いちばん気になっていること・困っていることを教えてください。あいまいでも大丈夫です。」
+Q2「最近のお子さんの様子はいかがですか？うまくいっていることや、少し安心したことも含めて教えていただけると嬉しいです。」
+Q3「お子さんが安心できる環境や、合う関わり方はありますか？」
+Q4「苦手な場面や、負担になりやすい関わり方があれば教えてください。」
+Q5「これまで試してきたことや、うまくいったことがあれば教えてください。」
+Q6「学校にいちばん相談したいことは何ですか？まだはっきりしなくても大丈夫です。」
+Q7「お子さん自身はどんな気持ちや希望を持っていそうですか？わかる範囲で教えてください。」
+Q8「今日の面談で確認したいこと・決めたいことがあれば教えてください。」
+
+【進行ルール】
+・返答の最終行に必ず「[Q:X/8]」を付ける（Xは今終わった質問番号。最初の挨拶は[Q:0/8]）
+・Q8まで終わったら「[Q:DONE]」を付ける`;
+
+function buildDetailSystem(themes) {
+  return `あなたは面談準備サポートアシスタントです。
+${BASE}
+
+【じっくりコース：選ばれたテーマを深く聞く】
+選ばれたテーマ（${themes.length}件）：${themes.join('・')}
+
+各テーマについて2〜3問、深掘りして聞いてください。
+テーマが変わるときは「次は〜についてお聞きします」と案内する。
+
+【進行ルール】
+・返答の最終行に「[THEME:N/${themes.length}]」を付ける（Nは現在のテーマ番号。最初は[THEME:0/${themes.length}]）
+・全テーマ終了時は「[Q:DONE]」を付ける`;
+}
+
+const FEELING_SYSTEM = `あなたは面談準備サポートアシスタントです。
+${BASE}
+
+【気持ちから整理コース】
+まだ言葉にできていない保護者の気持ちを、一緒に整理します。
+
+最初の一言：「今、お子さんのことで、いちばんしんどいのはどんなことですか？うまく言葉にできなくても大丈夫です。」
+
+・答えを急かさない
+・「〜ということでしょうか？」「〜かもしれませんね」と言語化を手伝う
+・話が広がってきたら自然に情報を整理していく
+・十分に整理できたと感じたら「少し整理できてきましたね。準備ができたら、下の『たたき台を作る』ボタンを押してみてください。[Q:DONE]」と伝える
+
+【進行ルール】
+・返答の最終行に「[Q:OPEN]」を付ける（整理完了時のみ[Q:DONE]）`;
+
+// ─── トップに戻る ───
+function backToTop() {
+  if (!confirm('最初の画面に戻りますか？\n入力した内容は消えます。')) return;
+  history = [];
+  conversationLog = [];
+  currentQ = 0;
+  selectedThemes = [];
+  document.getElementById('chat').innerHTML = '';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('summary-screen').style.display = 'none';
+  document.getElementById('course-select').style.display = 'flex';
+}
+
+// ─── コース選択 ───
+function selectCourse(course) {
+  currentCourse = course;
+  if (course === 'detail') {
+    showThemeSelect();
+  } else {
+    startChat();
+  }
+}
+
+function backToCourseSelect() {
+  document.getElementById('theme-select').style.display = 'none';
+  document.getElementById('course-select').style.display = 'flex';
+}
+
+// ─── テーマ選択画面 ───
+function showThemeSelect() {
+  document.getElementById('course-select').style.display = 'none';
+  document.getElementById('theme-select').style.display = 'flex';
+  const list = document.getElementById('theme-list');
+  list.innerHTML = '';
+  THEMES.forEach(t => {
+    const item = document.createElement('div');
+    item.className = 'theme-item';
+    item.dataset.id = t.id;
+    item.innerHTML = `<div class="theme-check"></div><div class="theme-label">${t.label}</div>`;
+    item.addEventListener('click', () => toggleTheme(item, t));
+    list.appendChild(item);
+  });
+}
+
+function toggleTheme(item, theme) {
+  item.classList.toggle('checked');
+  const check = item.querySelector('.theme-check');
+  check.textContent = item.classList.contains('checked') ? '✓' : '';
+  selectedThemes = Array.from(document.querySelectorAll('.theme-item.checked'))
+    .map(el => THEMES.find(t => t.id === el.dataset.id).label);
+}
+
+function toggleSelectAll() {
+  const items = document.querySelectorAll('.theme-item');
+  const allChecked = Array.from(items).every(i => i.classList.contains('checked'));
+  items.forEach(item => {
+    const t = THEMES.find(t => t.id === item.dataset.id);
+    if (allChecked) {
+      item.classList.remove('checked');
+      item.querySelector('.theme-check').textContent = '';
+    } else {
+      item.classList.add('checked');
+      item.querySelector('.theme-check').textContent = '✓';
+    }
+  });
+  selectedThemes = allChecked ? [] :
+    THEMES.map(t => t.label);
+}
+
+function startDetailCourse() {
+  if (selectedThemes.length === 0) {
+    alert('テーマを1つ以上選んでください。');
+    return;
+  }
+  startChat();
+}
+
+// ─── チャット起動 ───
+function startChat() {
+  document.getElementById('course-select').style.display = 'none';
+  document.getElementById('theme-select').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+
+  // バッジ
+  const badge = document.getElementById('course-badge');
+  badge.textContent = { quick: 'ざっくり', detail: 'じっくり', feeling: '気持ちから整理' }[currentCourse];
+  badge.className = 'course-badge ' + { quick: 'badge-quick', detail: 'badge-detail', feeling: 'badge-feeling' }[currentCourse];
+
+  // プログレス
+  const pw = document.getElementById('progress-wrap');
+  const pf = document.getElementById('progress-fill');
+  pw.style.display = currentCourse === 'feeling' ? 'none' : 'flex';
+  pf.className = 'progress-fill ' + (currentCourse === 'quick' ? 'fill-quick' : 'fill-detail');
+  totalQ = currentCourse === 'quick' ? 8 : selectedThemes.length;
+  updateProgress(0);
+
+  // テキストエリア
+  const ta = document.getElementById('user-input');
+  ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 100) + 'px'; });
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+      e.preventDefault();
+      const v = ta.value.trim();
+      if (v) { ta.value = ''; ta.style.height = 'auto'; doSend(v); }
+    }
+  });
+  document.getElementById('send-btn').addEventListener('click', () => {
+    const v = ta.value.trim();
+    if (v) { ta.value = ''; ta.style.height = 'auto'; doSend(v); }
+  });
+  document.getElementById('summary-btn').addEventListener('click', generateSummary);
+  document.getElementById('back-btn').addEventListener('click', () => {
+    document.getElementById('summary-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+  });
+
+  // 初回挨拶（API不要）
+  const greetings = {
+    quick: 'こんにちは。\n8つの質問を通じて、お子さんのことを一緒に整理していきましょう。\nきれいにまとめる必要はありません。思いつくままで大丈夫です。\n\nまず、今いちばん気になっていること・困っていることを教えてください。\nあいまいでも構いません。\n[Q:0/8]',
+    detail: `こんにちは。\n今回は「${selectedThemes.join('・')}」についてお話を聞かせてください。\n一つひとつ、丁寧に聞いていきます。\n\nまず、「${selectedThemes[0]}」についてから始めましょう。\n最近の状況を教えていただけますか？\n[THEME:0/${selectedThemes.length}]`,
+    feeling: 'こんにちは。\n今日は、うまく言葉にできなくても大丈夫です。\n思っていることを、そのまま話してみてください。\n\n今、お子さんのことで、いちばんしんどいのはどんなことですか？\n[Q:OPEN]',
+  };
+  const greeting = greetings[currentCourse];
+  const clean = stripMarker(greeting);
+  history.push({ role: 'assistant', content: clean });
+  conversationLog.push({ role: 'bot', text: clean, time: nowTime() });
+  setTimeout(() => addBotMsg(clean, true), 300);
+}
+
+// ─── プログレス更新 ───
+function updateProgress(n) {
+  currentQ = n;
+  const pct = totalQ > 0 ? Math.min((n / totalQ) * 100, 100) : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  if (currentCourse === 'quick') {
+    document.getElementById('progress-text').textContent = n >= totalQ ? '完了' : `Q${n+1} / ${totalQ}`;
+  } else if (currentCourse === 'detail') {
+    document.getElementById('progress-text').textContent = n >= totalQ ? '完了' : `テーマ ${n+1} / ${totalQ}`;
+  }
+}
+
+function stripMarker(text) {
+  return text.replace(/\[Q:\d+\/\d+\]/g, '').replace(/\[Q:DONE\]/g, '').replace(/\[Q:OPEN\]/g, '').replace(/\[THEME:\d+\/\d+\]/g, '').trim();
+}
+
+function parseMarker(text) {
+  const qMatch = text.match(/\[Q:(\d+)\/(\d+)\]/);
+  const themeMatch = text.match(/\[THEME:(\d+)\/(\d+)\]/);
+  const done = text.includes('[Q:DONE]');
+  const open = text.includes('[Q:OPEN]');
+  if (done) return { type: 'done' };
+  if (open) return { type: 'open' };
+  if (qMatch) return { type: 'q', n: parseInt(qMatch[1]), total: parseInt(qMatch[2]) };
+  if (themeMatch) return { type: 'theme', n: parseInt(themeMatch[1]), total: parseInt(themeMatch[2]) };
+  return null;
+}
+
+// ─── API呼び出し ───
+function getSystemPrompt() {
+  if (currentCourse === 'quick') return QUICK_SYSTEM;
+  if (currentCourse === 'detail') return buildDetailSystem(selectedThemes);
+  return FEELING_SYSTEM;
+}
+
+async function callAI(userMsg) {
+  history.push({ role: 'user', content: userMsg });
+  if (history.length > 32) history = history.slice(-32);
+
+  let res;
+  try {
+    res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ system: getSystemPrompt(), messages: history }),
+    });
+  } catch (e) { history.pop(); throw e; }
+
+  if (!res.ok) {
+    history.pop();
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  const reply = data.reply;
+  history.push({ role: 'assistant', content: reply });
+  return reply;
+}
+
+// ─── メッセージ送信 ───
+async function doSend(text) {
+  document.getElementById('send-btn').disabled = true;
+  addUserMsg(text);
+  conversationLog.push({ role: 'user', text, time: nowTime() });
+
+  const typing = addTyping();
+  try {
+    const raw = await callAI(text);
+    typing.remove();
+    const clean = stripMarker(raw);
+    conversationLog.push({ role: 'bot', text: clean, time: nowTime() });
+    addBotMsg(clean);
+
+    const marker = parseMarker(raw);
+    if (marker) {
+      if (marker.type === 'q') updateProgress(marker.n);
+      if (marker.type === 'theme') updateProgress(marker.n);
+      if (marker.type === 'done') updateProgress(totalQ);
+    }
+  } catch (e) {
+    typing.remove();
+    addBotMsg(`エラーが発生しました。\n詳細：${e.message || e}`);
+    console.error(e);
+  }
+  document.getElementById('send-btn').disabled = false;
+}
+
+// ─── まとめ生成 ───
+async function generateSummary() {
+  document.getElementById('summary-btn').textContent = '作成中…';
+  document.getElementById('summary-btn').disabled = true;
+  try {
+    const raw = await callAI('[GENERATE_SUMMARY]');
+    const match = raw.match(/---SUMMARY_START---([\s\S]*?)---SUMMARY_END---/);
+    const content = match ? match[1].trim() : raw;
+    renderSummary(content);
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('summary-screen').style.display = 'flex';
+  } catch (e) {
+    alert(`まとめの生成に失敗しました。\n${e.message || e}`);
+    console.error(e);
+  }
+  document.getElementById('summary-btn').textContent = '📄 たたき台を作る';
+  document.getElementById('summary-btn').disabled = false;
+}
+
+// ─── まとめ描画 ───
+function renderSummary(text) {
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日`;
+  const courseName = { quick: 'ざっくりコース', detail: 'じっくりコース', feeling: '気持ちから整理コース' }[currentCourse];
+
+  let html = '';
+
+  // ── ページ1：先生向け説明 ──
+  html += `<div class="print-section">
+    <div class="doc-title"><h1>🌿 このシートについて</h1><p>面談担当の先生へ</p></div>
+    <div class="teacher-section"><h3>■ このシートについて</h3>
+    <p>このシートは、保護者と学校がお子さんの状況を共有し、一緒に考えていくための「たたき台」として作られています。</p></div>
+    <div class="teacher-section"><h3>■ 使い方のポイント</h3>
+    <ul><li>すべてが整理されている前提ではありません</li><li>書かれている内容は「途中の考え」として扱ってください</li><li>要望ではなく「相談の材料」としてご覧ください</li></ul></div>
+    <div class="teacher-section"><h3>■ 面談の進め方</h3>
+    <ul><li>まずは保護者の話を聞く</li><li>学校での様子を共有する</li><li>できること／難しいことを率直に出し合う</li><li>一緒に次の一歩を考える</li></ul></div>
+    <div class="teacher-section"><h3>■ このシートの目的</h3>
+    <ul><li>対立することではなく、状況を整理すること</li><li>足りていない支援やリソースを見える形にすること</li><li>学校と家庭が同じ方向を見て考えられる状態をつくること</li></ul></div>
+    <div class="doc-footer">作成日：${dateStr}　使用コース：${courseName}</div>
+  </div>`;
+
+  // ── ページ2：面談用たたき台 ──
+  html += `<div class="print-section print-page-break">
+    <div class="doc-title"><h1>📋 面談用たたき台シート</h1><p>作成日：${dateStr}　※「たたき台」として一緒に整理していくためのシートです</p></div>`;
+
+  const SECTION_KEYS = [
+    '今いちばん大事にしたいこと',
+    '今できていること・安心できること',
+    '今いちばん困っていること・気になっていること',
+    'お子さんの特徴（現時点での整理）',
+    '学校と一緒に考えたいこと',
+    '家庭でできること・試してみたいこと',
+    '今日の面談で確認・決めたいこと',
+  ];
+
+  const lines = text.split('\n');
+  let currentKey = null, buf = [];
+  const flush = () => {
+    if (!currentKey) return;
+    const body = buf.join('\n').trim();
+    const isTalk = currentKey.includes('考えたいこと') || currentKey.includes('確認・決めたい');
+    html += `<div class="doc-block"><h3>■ ${currentKey}</h3><div class="doc-text${isTalk?' blue':''}">${esc(body).replace(/\n/g,'<br>')}</div></div>`;
+    buf = [];
+  };
+  for (const line of lines) {
+    const m = line.match(/^【(.+?)】/);
+    if (m) { flush(); currentKey = m[1]; }
+    else if (currentKey) buf.push(line);
+  }
+  flush();
+
+  html += `<div class="doc-footer">このシートは「たたき台」です。面談の中で一緒に加筆・修正してください。<br>※お子さんのお名前は入力していません。面談の際に口頭で補足してください。</div></div>`;
+
+  // ── ページ3：対話記録 ──
+  html += `<div class="print-section print-page-break">
+    <div class="doc-title"><h1>💬 今回の対話記録</h1><p>作成日：${dateStr}　※保護者が話してくださった内容の記録です</p></div>`;
+  conversationLog.forEach(item => {
+    if (item.role === 'bot') {
+      html += `<div class="log-item"><div class="log-label">🌿 アシスタント</div><div class="log-bot">${esc(item.text).replace(/\n/g,'<br>')}</div></div>`;
+    } else {
+      html += `<div class="log-item"><div class="log-label" style="text-align:right">👤 保護者</div><div class="log-user">${esc(item.text).replace(/\n/g,'<br>')}</div></div>`;
+    }
+  });
+  html += `<div class="doc-footer">対話記録は文脈の参考としてご活用ください。</div></div>`;
+
+  document.getElementById('summary-body').innerHTML = html;
+}
+
+// ─── UI ヘルパー ───
+function nowTime() {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function scrollBottom() { const c = document.getElementById('chat'); setTimeout(() => c.scrollTop = c.scrollHeight, 60); }
+
+function addBotMsg(text, instant = false) {
+  const chat = document.getElementById('chat');
+  const row = document.createElement('div');
+  row.className = 'msg-row' + (instant ? ' show' : '');
+  row.innerHTML = `<div class="msg-avatar">🌿</div><div class="msg-col"><div class="msg-bubble">${esc(text).replace(/\n/g,'<br>')}</div><div class="msg-time">${nowTime()}</div></div>`;
+  chat.appendChild(row);
+  if (!instant) setTimeout(() => row.classList.add('show'), 30);
+  scrollBottom();
+}
+
+function addUserMsg(text) {
+  const chat = document.getElementById('chat');
+  const row = document.createElement('div');
+  row.className = 'msg-row user';
+  row.innerHTML = `<div class="msg-avatar">👤</div><div class="msg-col"><div class="msg-bubble">${esc(text).replace(/\n/g,'<br>')}</div><div class="msg-time">${nowTime()}</div></div>`;
+  chat.appendChild(row);
+  setTimeout(() => row.classList.add('show'), 30);
+  scrollBottom();
+}
+
+function addTyping() {
+  const chat = document.getElementById('chat');
+  const row = document.createElement('div');
+  row.className = 'msg-row show typing-row';
+  row.innerHTML = `<div class="msg-avatar">🌿</div><div class="msg-col"><div class="msg-bubble"><div class="typing-dots"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div></div>`;
+  chat.appendChild(row);
+  scrollBottom();
+  return row;
+}
+</script>
+</body>
+</html>
