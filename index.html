@@ -23,6 +23,19 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 .btn-outline { background: transparent; border: 1.5px solid var(--green-m); color: var(--sub); }
 .btn-outline:hover { border-color: var(--green); color: var(--green); }
 
+/* ─── 続きから バナー ─── */
+#resume-banner {
+  display: none; width: 100%; max-width: 420px; margin-bottom: 16px;
+  background: var(--blue-l); border: 1.5px solid var(--blue); border-radius: 14px;
+  padding: 14px 16px;
+}
+#resume-banner p { font-size: 13px; color: var(--text); margin-bottom: 4px; }
+#resume-banner .resume-course { font-size: 12px; color: var(--sub); margin-bottom: 10px; }
+#resume-banner .resume-note { font-size: 11px; color: var(--sub); margin-top: 8px; }
+.resume-actions { display: flex; gap: 8px; }
+.btn-resume { background: var(--blue); color: #fff; }
+.btn-resume:hover { background: #6a94b8; }
+
 /* ─── コース選択画面 ─── */
 #course-select { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 28px 20px; }
 .cs-title { text-align: center; margin-bottom: 28px; }
@@ -154,6 +167,14 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 }
 #back-top-btn:hover { background: var(--green-m); }
 
+#save-btn {
+  background: var(--blue-l); border: 1.5px solid var(--blue); color: var(--blue);
+  font-size: 12px; font-weight: bold; font-family: inherit;
+  cursor: pointer; padding: 5px 11px; border-radius: 16px;
+  flex-shrink: 0; transition: all 0.2s; white-space: nowrap;
+}
+#save-btn:hover { background: #ddeaf5; }
+
 .ts-nav { width: 100%; max-width: 420px; margin-bottom: 8px; }
 .ts-back-btn {
   background: var(--green-l); border: 1.5px solid var(--green-m); color: var(--green);
@@ -195,6 +216,28 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 
 .doc-footer { text-align: center; font-size: 11px; color: var(--sub); margin-top: 24px; border-top: 1px solid var(--border); padding-top: 14px; line-height: 1.8; }
 
+/* ─── パスワードモーダル ─── */
+#pw-modal {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45); z-index: 100;
+  align-items: center; justify-content: center;
+}
+#pw-modal.open { display: flex; }
+#pw-box {
+  background: var(--white); border-radius: 18px; padding: 28px 24px;
+  width: 90%; max-width: 360px; box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+#pw-box h3 { font-size: 15px; margin-bottom: 6px; }
+#pw-box p { font-size: 12px; color: var(--sub); margin-bottom: 16px; line-height: 1.6; }
+#pw-input {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 10px 13px; font-size: 15px; font-family: inherit;
+  outline: none; margin-bottom: 8px; letter-spacing: 0.1em;
+}
+#pw-input:focus { border-color: var(--green); }
+#pw-error { font-size: 12px; color: #c0392b; min-height: 18px; margin-bottom: 10px; }
+.pw-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
 /* ─── 印刷 ─── */
 @media print {
   #course-select, #theme-select, #app { display: none !important; }
@@ -212,6 +255,15 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 
 <!-- ① コース選択 -->
 <div id="course-select">
+  <div id="resume-banner">
+    <p>💾 前回の途中データがあります</p>
+    <div class="resume-course" id="resume-course-label"></div>
+    <div class="resume-actions">
+      <button class="btn btn-resume" onclick="resumeChat()">続きから始める</button>
+      <button class="btn btn-outline" onclick="clearSavedData()">新しく始める</button>
+    </div>
+    <div class="resume-note">※このブラウザにのみ保存されています。共有端末ではご注意ください。</div>
+  </div>
   <div class="cs-title">
     <h1>🌿 学校との面談準備サポート</h1>
     <p>どのように進めますか？<br>今の気持ちに合ったコースを選んでください。</p>
@@ -267,6 +319,7 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 <div id="app">
   <div id="app-header">
     <button id="back-top-btn" onclick="backToTop()">← 最初に戻る</button>
+    <button id="save-btn" onclick="saveProgress()">💾 保存して中断</button>
     <div class="header-icon">🌿</div>
     <div class="header-info">
       <h1>学校との面談準備<span class="course-badge" id="course-badge"></span></h1>
@@ -293,9 +346,23 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
   <div id="summary-header">
     <h2>📄 面談用たたき台シート</h2>
     <button class="s-btn" id="back-btn">← 戻る</button>
-    <button class="s-btn" onclick="window.print()">🖨 印刷</button>
+    <button class="s-btn" onclick="requestPrint()">🖨 印刷</button>
   </div>
   <div id="summary-body"></div>
+</div>
+
+<!-- パスワードモーダル -->
+<div id="pw-modal">
+  <div id="pw-box">
+    <h3>🖨 印刷パスワード</h3>
+    <p>印刷にはパスワードが必要です。<br>お持ちのパスワードを入力してください。</p>
+    <input type="password" id="pw-input" placeholder="パスワード" />
+    <div id="pw-error"></div>
+    <div class="pw-actions">
+      <button class="btn btn-outline" onclick="closePwModal()">キャンセル</button>
+      <button class="btn btn-green" onclick="submitPassword()">確認する</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -409,9 +476,121 @@ ${BASE}
 【進行ルール】
 ・返答の最終行に「[Q:OPEN]」を付ける（整理完了時のみ[Q:DONE]）`;
 
+// ─── localStorage 保存・復元 ───
+const SAVE_KEY = 'school_support_v2';
+
+function saveProgress() {
+  try {
+    const data = { currentCourse, selectedThemes, currentQ, totalQ, history, conversationLog };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    const btn = document.getElementById('save-btn');
+    btn.textContent = '✓ 保存しました';
+    setTimeout(() => { btn.textContent = '💾 保存して中断'; }, 2000);
+  } catch (e) {
+    alert('保存できませんでした。');
+  }
+}
+
+function loadSavedData() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    localStorage.removeItem(SAVE_KEY);
+    return null;
+  }
+}
+
+function clearSavedData() {
+  localStorage.removeItem(SAVE_KEY);
+  document.getElementById('resume-banner').style.display = 'none';
+}
+
+function checkSavedData() {
+  const data = loadSavedData();
+  if (!data) return;
+  const courseNames = { quick: 'ざっくりコース', detail: 'じっくりコース', feeling: '気持ちから整理コース' };
+  const label = courseNames[data.currentCourse] || data.currentCourse;
+  const progress = data.currentCourse === 'quick'
+    ? `（Q${data.currentQ} / ${data.totalQ} まで回答済み）`
+    : data.currentCourse === 'detail'
+    ? `（テーマ ${data.currentQ} / ${data.totalQ} まで）`
+    : '';
+  document.getElementById('resume-course-label').textContent = label + progress;
+  document.getElementById('resume-banner').style.display = 'block';
+}
+
+function resumeChat() {
+  const data = loadSavedData();
+  if (!data) return;
+
+  currentCourse = data.currentCourse;
+  selectedThemes = data.selectedThemes || [];
+  currentQ = data.currentQ;
+  totalQ = data.totalQ;
+  history = data.history || [];
+  conversationLog = data.conversationLog || [];
+
+  document.getElementById('course-select').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+
+  // バッジ
+  const badge = document.getElementById('course-badge');
+  badge.textContent = { quick: 'ざっくり', detail: 'じっくり', feeling: '気持ちから整理' }[currentCourse];
+  badge.className = 'course-badge ' + { quick: 'badge-quick', detail: 'badge-detail', feeling: 'badge-feeling' }[currentCourse];
+
+  // プログレス
+  const pw = document.getElementById('progress-wrap');
+  const pf = document.getElementById('progress-fill');
+  pw.style.display = currentCourse === 'feeling' ? 'none' : 'flex';
+  pf.className = 'progress-fill ' + (currentCourse === 'quick' ? 'fill-quick' : 'fill-detail');
+  updateProgress(currentQ);
+
+  // イベントリスナー
+  attachChatListeners();
+
+  // 会話履歴を再描画
+  const chat = document.getElementById('chat');
+  chat.innerHTML = '';
+  conversationLog.forEach(item => {
+    if (item.role === 'bot') addBotMsg(item.text, true);
+    else addUserMsg(item.text);
+  });
+  scrollBottom();
+}
+
+function attachChatListeners() {
+  const ta = document.getElementById('user-input');
+  const newTa = ta.cloneNode(true);
+  ta.parentNode.replaceChild(newTa, ta);
+  newTa.addEventListener('input', () => { newTa.style.height = 'auto'; newTa.style.height = Math.min(newTa.scrollHeight, 100) + 'px'; });
+  newTa.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+      e.preventDefault();
+      const v = newTa.value.trim();
+      if (v) { newTa.value = ''; newTa.style.height = 'auto'; doSend(v); }
+    }
+  });
+
+  const sendBtn = document.getElementById('send-btn');
+  const newSendBtn = sendBtn.cloneNode(true);
+  sendBtn.parentNode.replaceChild(newSendBtn, sendBtn);
+  newSendBtn.addEventListener('click', () => {
+    const v = document.getElementById('user-input').value.trim();
+    if (v) { document.getElementById('user-input').value = ''; doSend(v); }
+  });
+
+  document.getElementById('summary-btn').onclick = generateSummary;
+  document.getElementById('back-btn').onclick = () => {
+    document.getElementById('summary-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+  };
+}
+
 // ─── トップに戻る ───
 function backToTop() {
   if (!confirm('最初の画面に戻りますか？\n入力した内容は消えます。')) return;
+  clearSavedData();
   history = [];
   conversationLog = [];
   currentQ = 0;
@@ -505,25 +684,7 @@ function startChat() {
   totalQ = currentCourse === 'quick' ? 8 : selectedThemes.length;
   updateProgress(0);
 
-  // テキストエリア
-  const ta = document.getElementById('user-input');
-  ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 100) + 'px'; });
-  ta.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
-      e.preventDefault();
-      const v = ta.value.trim();
-      if (v) { ta.value = ''; ta.style.height = 'auto'; doSend(v); }
-    }
-  });
-  document.getElementById('send-btn').addEventListener('click', () => {
-    const v = ta.value.trim();
-    if (v) { ta.value = ''; ta.style.height = 'auto'; doSend(v); }
-  });
-  document.getElementById('summary-btn').addEventListener('click', generateSummary);
-  document.getElementById('back-btn').addEventListener('click', () => {
-    document.getElementById('summary-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-  });
+  attachChatListeners();
 
   // 初回挨拶（API不要）
   const greetings = {
@@ -634,6 +795,7 @@ async function generateSummary() {
     const match = raw.match(/---SUMMARY_START---([\s\S]*?)---SUMMARY_END---/);
     const content = match ? match[1].trim() : raw;
     renderSummary(content);
+    clearSavedData();
     document.getElementById('app').style.display = 'none';
     document.getElementById('summary-screen').style.display = 'flex';
   } catch (e) {
@@ -740,6 +902,64 @@ function addUserMsg(text) {
   setTimeout(() => row.classList.add('show'), 30);
   scrollBottom();
 }
+
+// ─── 印刷パスワード ───
+const PRINT_KEY = 'school_support_print_unlocked';
+
+function requestPrint() {
+  if (localStorage.getItem(PRINT_KEY) === '1') {
+    window.print();
+    return;
+  }
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-error').textContent = '';
+  document.getElementById('pw-modal').classList.add('open');
+  setTimeout(() => document.getElementById('pw-input').focus(), 100);
+}
+
+function closePwModal() {
+  document.getElementById('pw-modal').classList.remove('open');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closePwModal();
+});
+
+async function submitPassword() {
+  const pw = document.getElementById('pw-input').value;
+  if (!pw) return;
+
+  const errEl = document.getElementById('pw-error');
+  errEl.textContent = '確認中…';
+
+  try {
+    const res = await fetch('/api/verify-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw }),
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      localStorage.setItem(PRINT_KEY, '1');
+      closePwModal();
+      window.print();
+    } else {
+      errEl.textContent = 'パスワードが正しくありません。';
+      document.getElementById('pw-input').select();
+    }
+  } catch (e) {
+    errEl.textContent = 'エラーが発生しました。もう一度お試しください。';
+  }
+}
+
+// Enterキーで送信
+document.getElementById('pw-input')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitPassword();
+});
+
+// ─── 初期化 ───
+checkSavedData();
 
 function addTyping() {
   const chat = document.getElementById('chat');
