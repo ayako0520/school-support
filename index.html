@@ -126,11 +126,12 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 
 /* まとめバー */
 #summary-bar {
-  background: var(--white); border-top: 1px solid var(--border);
+  background: var(--green-l); border-top: 2px solid var(--green-m);
+  border-left: 4px solid var(--green);
   padding: 8px 14px; flex-shrink: 0;
   display: flex; align-items: center; gap: 10px;
 }
-#summary-bar p { font-size: 11px; color: var(--sub); flex: 1; line-height: 1.5; }
+#summary-bar p { font-size: 11px; color: var(--green-d); flex: 1; line-height: 1.5; font-weight: bold; }
 #summary-btn { padding: 8px 16px; background: var(--green); color: #fff; border: none; border-radius: 16px; font-size: 12px; font-family: inherit; font-weight: bold; cursor: pointer; white-space: nowrap; transition: background 0.2s; }
 #summary-btn:hover { background: var(--green-d); }
 
@@ -141,6 +142,9 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 #send-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--green); color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.2s; }
 #send-btn:hover { background: var(--green-d); }
 #send-btn:disabled { background: var(--border); cursor: default; }
+
+/* スキップヒント */
+#skip-hint { background: var(--white); text-align: center; font-size: 11px; color: var(--sub); padding: 4px 0 6px; flex-shrink: 0; }
 
 #back-top-btn {
   background: var(--green-l); border: 1.5px solid var(--green-m); color: var(--green);
@@ -217,7 +221,8 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
       <div class="card-icon">📋</div>
       <div class="card-body">
         <h2>ざっくりコース</h2>
-        <p>8つの質問に答えながら、基本的な情報を整理します。はじめての方にもおすすめです。</p>
+        <p>8つの質問に順番に答えながら、基本的な情報を整理します。はじめての方にもおすすめです。</p>
+        <p style="font-size:11px;color:var(--green);margin-top:5px;">全問答えなくてOK・途中でたたき台を作れます</p>
         <div class="card-time">⏱ 約10〜15分 / 全8問</div>
       </div>
     </div>
@@ -226,6 +231,7 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
       <div class="card-body">
         <h2>じっくりコース</h2>
         <p>話したいテーマを自分で選んで、深く整理できます。伝えたいことが多い方に。</p>
+        <p style="font-size:11px;color:var(--amber);margin-top:5px;">テーマは少なめでもOK・途中でたたき台を作れます</p>
         <div class="card-time">⏱ テーマ数に応じて / テーマ選択式</div>
       </div>
     </div>
@@ -234,6 +240,7 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
       <div class="card-body">
         <h2>気持ちから整理コース</h2>
         <p>「何が気になっているのかわからない」そんな方向け。まず話すことから始めます。</p>
+        <p style="font-size:11px;color:var(--purple);margin-top:5px;">話せたと感じたら、いつでもたたき台を作れます</p>
         <div class="card-time">⏱ 自由な対話形式</div>
       </div>
     </div>
@@ -278,6 +285,7 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
     <textarea id="user-input" placeholder="思いつくままに書いてください…" rows="1"></textarea>
     <button id="send-btn">↑</button>
   </div>
+  <div id="skip-hint">答えにくいときは「スキップ」と送ってください</div>
 </div>
 
 <!-- ④ まとめ -->
@@ -519,9 +527,9 @@ function startChat() {
 
   // 初回挨拶（API不要）
   const greetings = {
-    quick: 'こんにちは。\n8つの質問を通じて、お子さんのことを一緒に整理していきましょう。\nきれいにまとめる必要はありません。思いつくままで大丈夫です。\n\nまず、今いちばん気になっていること・困っていることを教えてください。\nあいまいでも構いません。\n[Q:0/8]',
-    detail: `こんにちは。\n今回は「${selectedThemes.join('・')}」についてお話を聞かせてください。\n一つひとつ、丁寧に聞いていきます。\n\nまず、「${selectedThemes[0]}」についてから始めましょう。\n最近の状況を教えていただけますか？\n[THEME:0/${selectedThemes.length}]`,
-    feeling: 'こんにちは。\n今日は、うまく言葉にできなくても大丈夫です。\n思っていることを、そのまま話してみてください。\n\n今、お子さんのことで、いちばんしんどいのはどんなことですか？\n[Q:OPEN]',
+    quick: 'こんにちは。\n8つの質問を通じて、お子さんのことを一緒に整理していきましょう。\nきれいにまとめる必要はありません。思いつくままで大丈夫です。\n答えにくい質問は「スキップ」と送ってもらえれば次に進みます。また、途中でも下の「たたき台を作る」ボタンが押せます。\n\nまず、今いちばん気になっていること・困っていることを教えてください。\nあいまいでも構いません。\n[Q:0/8]',
+    detail: `こんにちは。\n今回は「${selectedThemes.join('・')}」についてお話を聞かせてください。\n答えにくい質問は「スキップ」と送ってもらえれば次に進みます。途中でも「たたき台を作る」ボタンが押せます。\n\nまず、「${selectedThemes[0]}」についてから始めましょう。\n最近の状況を教えていただけますか？\n[THEME:0/${selectedThemes.length}]`,
+    feeling: 'こんにちは。\n今日は、うまく言葉にできなくても大丈夫です。\n思っていることを、そのまま話してみてください。\n話せたと感じたら、いつでも下の「たたき台を作る」ボタンが押せます。\n\n今、お子さんのことで、いちばんしんどいのはどんなことですか？\n[Q:OPEN]',
   };
   const greeting = greetings[currentCourse];
   const clean = stripMarker(greeting);
